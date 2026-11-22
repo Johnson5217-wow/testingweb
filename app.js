@@ -1,0 +1,15 @@
+const products=[
+  {id:1,name:'明前龙井',desc:'清鲜豆香 · 2025 春茶',price:168,category:'green',shape:'tea-green',tag:'NEW'},
+  {id:2,name:'凤凰单丛',desc:'蜜兰香 · 轻焙火',price:238,category:'oolong',shape:'tea-oolong',tag:'02'},
+  {id:3,name:'正山小种',desc:'桂圆甜香 · 松烟淡',price:198,category:'black',shape:'tea-black',tag:'03'},
+  {id:4,name:'白瓷盖碗',desc:'手工薄胎 · 120ml',price:128,category:'ware',shape:'tea-ware',tag:'04'}
+];
+let cart=JSON.parse(localStorage.getItem('nova-cart')||'[]');
+const grid=document.querySelector('#productGrid'),search=document.querySelector('#searchInput'),filter=document.querySelector('#categoryFilter');
+function renderProducts(){const q=search.value.toLowerCase(),f=filter.value;grid.innerHTML=products.filter(p=>(f==='all'||p.category===f)&&(p.name+p.desc).toLowerCase().includes(q)).map(p=>`<article class="product-card"><div class="product-image ${p.category}"><span>${p.tag}</span><div class="shape ${p.shape}"></div></div><div class="product-info"><div><p>${p.name}</p><small>${p.desc}</small></div><strong class="product-price">¥${p.price}</strong></div><button class="add-product" data-id="${p.id}">+ 收藏这款茶</button></article>`).join('')||'<p>换个关键词，试试寻找另一种香气。</p>';document.querySelectorAll('.add-product').forEach(b=>b.onclick=()=>add(+b.dataset.id));}
+function add(id){const found=cart.find(i=>i.id===id);found?found.qty++:cart.push({id,qty:1});save();openCart();}
+function save(){localStorage.setItem('nova-cart',JSON.stringify(cart));renderCart();}
+function renderCart(){const items=document.querySelector('#cartItems');let count=cart.reduce((a,i)=>a+i.qty,0),total=0;document.querySelector('#cartCount').textContent=count;if(!cart.length){items.innerHTML='<p class="empty-cart">还没有添加设备。<br />去挑一件适合你的吧。</p>';document.querySelector('#cartTotal').textContent='¥0';return}items.innerHTML=cart.map(i=>{const p=products.find(x=>x.id===i.id);total+=p.price*i.qty;return `<div class="cart-row"><div class="cart-thumb ${p.category}"><div class="shape ${p.shape}"></div></div><div><b>${p.name}</b><div class="qty"><button data-action="minus" data-id="${p.id}">−</button>${i.qty}<button data-action="plus" data-id="${p.id}">+</button></div></div><strong>¥${p.price*i.qty}</strong></div>`}).join('');document.querySelector('#cartTotal').textContent='¥'+total;items.querySelectorAll('button').forEach(b=>b.onclick=()=>{const i=cart.find(x=>x.id===+b.dataset.id);b.dataset.action==='plus'?i.qty++:i.qty--;cart=cart.filter(x=>x.qty>0);save()});}
+function openCart(){document.querySelector('.cart-drawer').classList.add('open');document.querySelector('.drawer-overlay').classList.add('open')}
+function closeCart(){document.querySelector('.cart-drawer').classList.remove('open');document.querySelector('.drawer-overlay').classList.remove('open')}
+document.querySelector('.cart-btn').onclick=openCart;document.querySelector('.close-cart').onclick=closeCart;document.querySelector('.drawer-overlay').onclick=closeCart;document.querySelector('.checkout-btn').onclick=()=>alert('这是一个演示商店，结算功能暂未接入。');search.oninput=renderProducts;filter.onchange=renderProducts;renderProducts();renderCart();
